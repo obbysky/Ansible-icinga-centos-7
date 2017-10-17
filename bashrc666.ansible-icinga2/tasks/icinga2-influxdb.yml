@@ -1,0 +1,9 @@
+- name: Enable feature influxdb
+  raw: icinga2 feature enable influxdb
+  when: icinga2_influxdb
+
+- name: Configure influxdb feature
+  template:
+    src: influxdb.j2
+    dest: /etc/icinga2/features-enabled/influxdb.conf
+  when: icinga2_influxdb

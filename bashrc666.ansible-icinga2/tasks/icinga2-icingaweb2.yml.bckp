@@ -1,0 +1,151 @@
+---
+- name: Install Icinga Web2 on CentOS family
+  yum: name=icingaweb2 
+       state=latest
+  when: ansible_os_family == 'RedHat'
+  when: ansible_pkg_mgr == "yum" 
+
+  notify:
+    - Enable icinga2 features
+    - Start Icinga2
+    - Start httpd
+
+- name: Install Icingacli on CentOS Family
+  yum: name=icingacli
+       state=latest
+  when: ansible_pkg_mgr == "yum"
+
+  notify:
+    - Enable icinga2 features
+    - Start Icinga2
+    - Start httpd
+
+- name: Set php.ini timezone
+  ini_file:
+    dest: /etc/php.ini
+    section: PHP
+    option: date.timezone
+    value: Asia/Jakarta
+  
+- name: Set icingaweb2 vhost configuration
+  template:
+    src: icingaweb2-vhost.j2
+    dest: /etc/httpd/conf.d/icingaweb2.conf
+    #when: {icinga2_icingaweb2}
+
+- name: Setup icinga congfig directory for use by group icingaweb2
+  shell: icingacli setup config directory --group icingaweb2
+
+- name: Generate icingaweb2 token
+  shell: icingacli setup token create
+  args:
+    executable: /bin/bash
+  register: icingacli_setup_create_token
+
+- name: Register icingaweb2 token
+  shell: icingacli setup token show
+
+  register: icinga2_icingaweb2_token
+
+- name: check if icinga DB exists
+  shell: mysql -b icinga -e 'SHOW TABLES;' | grep icingaweb_group | wc -l
+  register: dbstatus
+
+- name: Add Icingaweb2 DB schema
+  mysql_db:
+    state: import
+    name: icingaweb2
+    target: /usr/share/doc/icingaweb2/schema/mysql.schema.sql
+  when: (dbstatus.stdout == "0")
+
+- name: Generate incingaadmin password
+  shell: openssl passwd -1 icinga
+  register: icinga
+  when: (dbstatus.stdout == "0")
+
+- name: Copy SQL script for icingaweb2 admin user
+  template:
+    src: icingaweb2-admin-sql.j2
+    dest: /tmp/icingaweb2-admin.sql
+  when: (dbstatus.stdout == "0")
+
+- name: Import Admin GUI user credential to icingaweb2 database
+  mysql_db:
+    state: import
+    name: icingaweb2
+    target: /tmp/icingaweb2-admin.sql
+  when: (dbstatus.stdout == "0")
+
+- name: Generate configs resources.ini to icingaweb2 config
+  template:
+    src: resources.j2
+    dest: /etc/icingaweb2/resources.ini
+    owner: admin
+    group: icingaweb2
+
+- name: Add config.ini to icingaweb2 config
+  template:
+    src: config.j2
+    dest: /etc/icingaweb2/config.ini
+    owner: admin
+    group: icingaweb2
+
+- name: Add authentication.ini to icingaweb2 config
+  template:
+    src: authentication.j2
+    dest: /etc/icingaweb2/authentication.ini
+    owner: admin
+    group: icingaweb2
+
+- name: Add roles.ini to icingaweb2 config
+  template:
+    src: roles.j2
+    dest: /etc/icingaweb2/roles.ini
+    owner: admin
+    group: icingaweb2
+
+- name: Create monitoring dir for icingaweb2
+  file:
+    path: /etc/icingaweb2/modules/monitoring
+    owner: admin
+    group: icingaweb2
+    state: directory
+
+- name: Add monitoring/config.ini to icingaweb2 config
+  template:
+    src: monitoring-config.j2
+    dest: /etc/icingaweb2/modules/monitoring/config.ini
+    owner: admin
+    group: icingaweb2
+
+- name: Add monitoring/backends.ini to icingaweb2 config
+  template:
+    src: monitoring-backends.j2
+    dest: /etc/icingaweb2/modules/monitoring/backends.ini
+    owner: admin
+    group: icingaweb2
+
+- name: Add monitoring/commandtransports.ini to icingaweb2 config
+  template:
+    src: monitoring-commandtransports.j2
+    dest: /etc/icingaweb2/modules/monitoring/commandtransports.ini
+    owner: admin
+    group: icingaweb2
+
+- name: Create modules dir
+  file:
+    path: /etc/icingaweb2/enabledModules
+    state: directory
+    owner: admin
+    group: icingaweb2
+    mode: 0775
+
+- name: Enable modules
+  file:
+    src: /usr/share/icingaweb2/modules/{{ item }}
+    dest: /etc/icingaweb2/enabledModules/{{ item }}
+    state: link
+    force: yes
+    owner: admin
+    group: icingaweb2
+  with_items: icinga2_icingaweb2_modules

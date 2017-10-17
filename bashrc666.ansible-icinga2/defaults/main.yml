@@ -1,0 +1,39 @@
+---
+# defaults file for icinga2
+
+icinga2_icingaweb2: False
+incinga2_influxdb: False
+icinga2_snmp_check: False
+icinga2_director: False
+icinga2_grafana: False
+icinga2_influxdb: False
+icinga2_livestatus: False
+icinga2_php_timezone: Europe/paris
+icinga2_icingaweb2_fqdn: "{{ ansible_hostname }}"
+icinga2_packages:
+  - icinga2
+  - icinga2-ido-mysql
+
+icinga2_icingaweb2_packages:
+  - httpd
+  - icingaweb2
+  - icingacli
+
+icinga2_database:
+  name: icinga2
+  user: icinga2
+  password: icinga2dbpasswd
+  host: localhost
+
+icinga2_icingaweb2_database:
+  name: icingaweb2
+  user: icingaweb2
+  password: icingaweb2dbpasswd
+  host: localhost
+
+icinga2_icingaweb2_admin: admin
+icinga2_icingaweb2_admin_password: admin
+icinga2_icingaweb2_modules:
+  - doc
+  - translation
+  - monitoring

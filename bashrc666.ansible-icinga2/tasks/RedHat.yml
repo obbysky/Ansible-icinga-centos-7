@@ -1,0 +1,56 @@
+---
+- include_vars: "{{ ansible_distribution }}_{{ ansible_distribution_major_version }}.yml"
+
+#Set SELinux in permissive mode
+- selinux:
+    policy: targeted
+    state: permissive
+
+- name: enable epel-release
+  shell: yum install epel-release -y
+
+- name: Install System dependencies
+  yum:
+    name: "{{ system_dependencies | join(',') }}"
+    state: latest
+    disable_gpg_check: yes
+
+- name: Install Icinga dependencies
+  yum:
+    name: "{{ icinga2_dependencies | join(',') }}"
+    state: latest
+    disable_gpg_check: yes
+    update_cache: yes
+
+- name: Install icinga repo
+  copy:
+    src: files/CentOS
+    dest: /etc/yum.repos.d/ICINGA-release.repo
+
+- name: Install Icinga2 packages
+  yum:
+    name: "{{ icinga2_packages | join(',') }}"
+    state: latest
+    disable_gpg_check: yes
+    #update_cache: yes
+
+- name: check if DB exists
+  shell: mysql -b icinga -e 'SHOW TABLES;' | grep icinga_acknowledgements | wc -l
+  register: dbstatus
+
+- name: Add Icinga2-ido schema
+  mysql_db:
+    state: import
+    name: icinga
+    target: /usr/share/icinga2-ido-mysql/schema/mysql.sql
+  when: (dbstatus.stdout == "0")
+
+- name: Copy icinga2-ido-mysql
+  template:
+    src: ido-mysql.j2
+    dest: /etc/icinga2/features-available/ido-mysql.conf
+
+- name: Install php-pdo_pgsql
+  yum: 
+   name: php-pdo_pgsql
+   state: latest

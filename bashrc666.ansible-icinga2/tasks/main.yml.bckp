@@ -1,0 +1,18 @@
+---
+# tasks file for icinga2
+- include: "{{ ansible_os_family }}.yml"
+
+- include: icinga2-manubulon.yml
+  when: (icinga2_snmp_check)
+
+- include: icinga2-icingaweb2.yml
+  when: (icinga2_icingaweb2)
+
+- include: icinga2-influxdb.yml
+  when: (icinga2_influxdb)
+
+- include: icinga2-grafana.yml
+  when: (icinga2_grafana)
+
+- include: icinga2-director.yml
+  when: (icinga2_director)

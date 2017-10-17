@@ -1,0 +1,53 @@
+---
+- hosts: monitors
+  become: yes
+  vars:
+# [[ Mysql Config icinga2 ]]
+    mysql_root_password: TEST
+    icinga2_database:
+      name: icinga2
+      user: icinga2
+      password: icinga2dbpasswd
+      host: localhost
+# [[ Mysql Config ]]
+    mysql_databases:
+      - name: "{{ icinga2_database.name }}"
+        encoding: utf8
+        collation: utf8_general_ci
+      - name: icingaweb2
+        encoding: utf8
+        collation: utf8_general_ci
+      - name: director
+        encoding: utf8
+        collation: utf8_general_ci
+    mysql_users:
+      - name: "{{ icinga2_database.user }}"
+        host: "{{ icinga2_database.host }}"
+        password: "{{ icinga2_database.password }}"
+        priv: "{{ icinga2_database.name }}.*:ALL"
+      - name: icingaweb2
+        host: "localhost"
+        password: icingaweb2dbpasswd
+        priv: "icingaweb2.*:ALL"
+      - name: director
+        host: "localhost"
+        password: directordbpasswd
+        priv: "director.*:ALL"
+# [[ Icinga2 Config ]]
+    icinga2_director: True
+    icinga2_icingaweb2_fqdn: localhost
+    icinga2_icingaweb2: True
+    icinga_snmp_check: True
+    icinga2influxdb: True
+    icinga2livestatus: False
+# [[ PHP Config ]]
+    php_packages:
+      - php-ldap
+      - php-pdo
+      - php-mysql
+      - php-intl
+# [[ Roles Def ]]
+  roles:
+    - role: geerlingguy.mysql
+    - role: geerlingguy.php
+    - role: bashrc666.ansible-icinga2

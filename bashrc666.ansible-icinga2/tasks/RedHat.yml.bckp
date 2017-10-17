@@ -1,0 +1,43 @@
+---
+- include_vars: "{{ ansible_distribution }}_{{ ansible_distribution_major_version }}.yml"
+
+- name: Install System dependencies
+  yum:
+    name: "{{ system_dependencies | join(',') }}"
+    state: present
+    disable_gpg_check: yes
+
+- name: Install Icinga dependencies
+  yum:
+    name: "{{ icinga2_dependencies | join(',') }}"
+    state: present
+    disable_gpg_check: yes
+    update_cache: yes
+
+- name: Install icinga repo
+  copy:
+    src: "files/{{ ansible_os_family }}"
+    dest: /etc/yum.repos.d/ICINGA-release.repo
+
+- name: Install Icinga2 packages
+  yum:
+    name: "{{ icinga2_packages | join(',') }}"
+    state: present
+    disable_gpg_check: yes
+    #update_cache: yes
+
+- name: check if DB exists
+  shell: mysql -b {{ icinga2_database.name }} -e 'SHOW TABLES;' | grep icinga_acknowledgements | wc -l
+  register: dbstatus
+
+- name: Add Icinga2-ido schema
+  mysql_db:
+    state: import
+    name: "{{ icinga2_database.name }}"
+    target: /usr/share/icinga2-ido-mysql/schema/mysql.sql
+  when: (dbstatus.stdout == "0")
+
+- name: Copy icinga2-ido-mysql
+  template:
+    src: ido-mysql.j2
+    dest: /etc/icinga2/features-available/ido-mysql.conf

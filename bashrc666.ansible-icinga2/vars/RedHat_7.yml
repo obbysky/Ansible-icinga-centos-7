@@ -1,0 +1,9 @@
+---
+system_dependencies:
+  - unzip
+
+icinga2_dependencies:
+  - MySQL-python
+  - python-pip
+  - nagios-plugins-all
+  - php-pdo_pgsql

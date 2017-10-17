@@ -1,0 +1,15 @@
+galaxy_info:
+  author: Gregory O'Toole
+  description: Icinga2 role 
+  company: CAPENSIS
+  license: BSD
+  min_ansible_version: 1.9
+
+  platforms:
+  - name: CentOS
+    versions:
+    - 6
+    - 7
+
+  dependencies:
+    - { role: geerlingguy.mysql }

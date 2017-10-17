@@ -1,0 +1,25 @@
+---
+- name: Check if grafana module is installed
+  stat:
+    path: /usr/share/icingaweb2/modules/grafana/
+  register: icinga2_grafana_module
+
+- name: Get icinga2 grafana
+  unarchive:
+    src: https://github.com/vshn/icingaweb2-module-grafana/archive/master.zip
+    dest: /usr/share/icingaweb2/modules
+    remote_src: True
+  when: not icinga2_grafana_module.stat.exists
+
+- name: Rename icinga2 grafana
+  shell: mv /usr/share/icingaweb2/modules/icingaweb2-module-grafana-master/ /usr/share/icingaweb2/modules/grafana/
+  when: not icinga2_grafana_module.stat.exists
+
+- name: Enable modules
+  file:
+    src: /usr/share/icingaweb2/modules/grafana
+    dest: /etc/icingaweb2/enabledModules/grafana
+    state: link
+    force: yes
+    owner: apache
+    group: icingaweb2

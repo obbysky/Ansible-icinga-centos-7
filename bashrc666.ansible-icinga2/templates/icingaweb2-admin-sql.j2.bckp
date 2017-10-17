@@ -1,0 +1,2 @@
+USE {{ icinga2_icingaweb2_database.name }}
+INSERT INTO icingaweb_user (name, active, password_hash) VALUES ('{{ icinga2_icingaweb2_admin }}', 1, '{{ icinga2_icingaweb2_admin_pass.stdout }}');

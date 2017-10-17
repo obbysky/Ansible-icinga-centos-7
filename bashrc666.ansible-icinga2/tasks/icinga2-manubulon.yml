@@ -1,0 +1,60 @@
+---
+- name: Install manubulon dependencies
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git
+    - perl-Net-SNMP
+    - perl-Getopt-Long-Descriptive
+    - gcc
+    - nagios-plugins
+    - nagios-plugins-nrpe
+    - nagios-plugins-snmp
+
+- name: Create manubulon dir
+  file:
+    path: /usr/lib64/nagios/manubulon
+    state: directory
+    mode: 0775
+    owner: root
+    group: root
+
+- name: Get master release
+  git:
+    repo: https://github.com/dnsmichi/manubulon-snmp.git
+    dest: /usr/lib64/nagios/manubulon-snmp-master/
+    clone: yes
+
+- name: Install manubulon plugins
+  copy:
+    src: "/usr/lib64/nagios/manubulon-snmp-master/plugins/{{ item }}"
+    dest: /usr/lib64/nagios/manubulon/
+    owner: icinga
+    group: icinga
+    mode: u+x
+    remote_src: yes
+  with_items:
+    - check_snmp_int.pl
+    - check_snmp_boostedge.pl
+    - check_snmp_cpfw.pl
+    - check_snmp_css_main.pl
+    - check_snmp_css.pl
+    - check_snmp_env.pl
+    - check_snmp_int.pl
+    - check_snmp_linkproof_nhr.pl
+    - check_snmp_load.pl
+    - check_snmp_mem.pl
+    - check_snmp_nsbox.pl
+    - check_snmp_process.pl
+    - check_snmp_storage.pl
+    - check_snmp_vrrp.pl
+    - check_snmp_win.pl
+
+- name: Update icinga2 constants
+  lineinfile:
+     dest: /etc/icinga2/constants.conf
+     regexp: "^const ManubulonPluginDir"
+     line: "const ManubulonPluginDir = \"/usr/lib64/nagios/manubulon\""
+     state: present
+  notify: Start Icinga2

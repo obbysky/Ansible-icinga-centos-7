@@ -1,0 +1,17 @@
+---
+# handlers file for icinga2
+- name: Start Icinga2
+  service:
+    name: icinga2
+    state: restarted
+    enabled: yes
+
+- name: Enable icinga2 features
+  raw: icinga2 feature enable command
+  notify: Start Icinga2
+
+- name: Start httpd
+  service:
+    name: httpd
+    state: restarted
+    enabled: yes
