@@ -1,7 +1,12 @@
 [![Build Status](https://travis-ci.org/bashrc666/ansible-role-icinga2.svg?branch=master)](https://travis-ci.org/bashrc666/ansible-role-icinga2)
 
+This role is edited form bashrc666 with final completed installation configuration, testing on CentOS 7.
+
+this role need geerlingguy.msysql & geerlingguy.php role, you must download it first.
+
 Ansible-Role-Icinga2
 =======
+
 
 This role is compatible by settings var and role with :
 
@@ -12,7 +17,7 @@ This role is compatible by settings var and role with :
 
 Install of Icingaweb2
 
- - Ready to go at http://IP/icingaweb2/
+ - Ready to go at http://localhost/icingaweb2/authentication/login
 
 Compatibility
 -------------
